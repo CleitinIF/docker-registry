@@ -1,0 +1,35 @@
+version: '3'
+
+services:
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - "/home/ec2-user/docker/nginx:/usr/share/nginx/html:ro"
+      - "/home/ec2-user/docker/nginx.conf:/etc/nginx/nginx.conf:ro"
+      - "/home/ec2-user/certs:/usr/share/certs:ro"
+      - "/home/ec2-user/auth/htpasswd:/etc/nginx/.htpasswd:ro"
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - docker-registry
+    links:
+      - docker-registry
+
+  docker-registry:
+    image: registry:2
+    container_name: docker-registry
+    expose:
+      - 5000
+    restart: always
+    volumes:
+      - "/home/ec2-user/docker/registry:/var/lib/registry:rw"
+
+  docker-registry-ui:
+    image: konradkleine/docker-registry-frontend:v2
+    container_name: docker-registry-ui
+    ports:
+      - 8080:80
+    environment:
+      ENV_DOCKER_REGISTRY_HOST: docker-registry
+      ENV_DOCKER_REGISTRY_PORT: 5000
